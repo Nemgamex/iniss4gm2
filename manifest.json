@@ -1,6 +1,6 @@
 {
   "name": "My Progressive Web App",
-  "short_name": "MyPWA",
+  "short_name": "CP 2.1",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
