@@ -192,6 +192,23 @@
         .diff-moderate { background: #fef9c3; color: #a16207; }
         .diff-hard { background: #fee2e2; color: #b91c1c; }
 
+        .timer-panel {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0 0 1.25rem;
+        }
+        .timer-card {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+        }
+        .timer-label { display: block; color: #1e40af; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .timer-value { display: block; font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .timer-value.timer-warning { color: var(--danger); }
+
         .question-title {
             font-size: 1.2rem;
             margin-bottom: 1.5rem;
@@ -438,6 +455,16 @@
             </div>
 
             <div class="quiz-card" id="quiz-box">
+                <div class="timer-panel" aria-live="polite">
+                    <div class="timer-card">
+                        <span class="timer-label">TOTAL TIME LEFT</span>
+                        <span class="timer-value" id="total-time-remaining">--:--</span>
+                    </div>
+                    <div class="timer-card">
+                        <span class="timer-label">THIS QUESTION</span>
+                        <span class="timer-value" id="question-time-remaining">01:00</span>
+                    </div>
+                </div>
                 <div class="question-header">
                     <span id="question-subject-badge" style="font-weight:700; font-size:0.85rem; color:var(--secondary-color); text-transform:uppercase;"></span>
                     <span id="question-difficulty-badge" class="badge-difficulty"></span>
@@ -454,7 +481,7 @@
 
                 <div class="nav-actions" style="justify-content: space-between; margin-top: 2rem;">
                     <button class="btn btn-back" onclick="confirmExitTest()" style="margin:0;">Exit Test</button>
-                    <button class="btn" id="next-btn" onclick="stepNextQuestion()" style="max-width: 140px; display: none;">Next →</button>
+                    <button class="btn" id="next-btn" onclick="stepNextQuestion()" style="max-width: 160px;">Skip / Next →</button>
                 </div>
             </div>
         </section>
@@ -502,6 +529,12 @@
         let activeQuestionIndex = 0;
         let runningScore = 0;
         let sessionTopicStats = {}; // Records performance per topic
+        let totalTimerInterval = null;
+        let questionTimerInterval = null;
+        let totalDeadline = 0;
+        let questionDeadline = 0;
+        let testIsActive = false;
+        let questionWasAnswered = false;
 
         // Fisher-Yates array shuffle helper
         function shuffleArray(array) {
@@ -676,6 +709,64 @@
                 `(${subjectLabel} • ${difficultyLabel})`;
         }
 
+        function formatTimeLeft(milliseconds) {
+            const seconds = Math.max(0, Math.ceil(milliseconds / 1000));
+            const minutesPart = Math.floor(seconds / 60);
+            const secondsPart = seconds % 60;
+            return String(minutesPart).padStart(2, '0') + ':' + String(secondsPart).padStart(2, '0');
+        }
+
+        function stopTestTimers() {
+            if (totalTimerInterval !== null) clearInterval(totalTimerInterval);
+            if (questionTimerInterval !== null) clearInterval(questionTimerInterval);
+            totalTimerInterval = null;
+            questionTimerInterval = null;
+        }
+
+        function updateTimerDisplay(elementId, milliseconds) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            element.textContent = formatTimeLeft(milliseconds);
+            element.classList.toggle('timer-warning', milliseconds <= 10000);
+        }
+
+        function startTotalTimer() {
+            totalDeadline = Date.now() + activeTestQuestions.length * 60 * 1000;
+            updateTotalTimer();
+            totalTimerInterval = setInterval(updateTotalTimer, 250);
+        }
+
+        function updateTotalTimer() {
+            if (!testIsActive) return;
+            const remaining = Math.max(0, totalDeadline - Date.now());
+            updateTimerDisplay('total-time-remaining', remaining);
+            if (remaining <= 0) finishTest('time');
+        }
+
+        function startQuestionTimer() {
+            if (questionTimerInterval !== null) clearInterval(questionTimerInterval);
+            questionDeadline = Date.now() + 60 * 1000;
+            updateQuestionTimer();
+            questionTimerInterval = setInterval(updateQuestionTimer, 250);
+        }
+
+        function updateQuestionTimer() {
+            if (!testIsActive) return;
+            const remaining = Math.max(0, questionDeadline - Date.now());
+            updateTimerDisplay('question-time-remaining', remaining);
+            if (remaining <= 0) {
+                // An unanswered question is skipped automatically when its minute expires.
+                stepNextQuestion();
+            }
+        }
+
+        function finishTest(reason) {
+            if (!testIsActive) return;
+            testIsActive = false;
+            stopTestTimers();
+            renderResultsView(reason);
+        }
+
         // Start Configured Test
         function startConfiguredTest() {
             const selectedCount = parseInt(document.getElementById('question-count-select').value, 10);
@@ -703,14 +794,19 @@
             activeQuestionIndex = 0;
             runningScore = 0;
             sessionTopicStats = {};
+            questionWasAnswered = false;
+            testIsActive = true;
 
             navigateTo('view-mock-test');
             displayCurrentQuestion();
+            startTotalTimer();
         }
 
         function displayCurrentQuestion() {
             const q = activeTestQuestions[activeQuestionIndex];
             document.getElementById('test-progress').innerText = `Question ${activeQuestionIndex + 1} of ${activeTestQuestions.length}`;
+            questionWasAnswered = false;
+            startQuestionTimer();
             
             // Sub-Topic badge
             const mainTopic = (q.subTopics && q.subTopics.length > 0) ? q.subTopics[0] : (q.subject || "Clinical Pharmacology");
@@ -725,7 +821,9 @@
             // Question Text
             document.getElementById('question-text').innerText = q.question;
             document.getElementById('explanation-container').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'block';
+            document.getElementById('next-btn').textContent =
+                activeQuestionIndex === activeTestQuestions.length - 1 ? 'Skip / Finish →' : 'Skip / Next →';
 
             // Options
             const container = document.getElementById('options-container');
@@ -759,6 +857,8 @@
         }
 
         function handleAnswerSelect(selectedIdx, selectedButton) {
+            if (!testIsActive || questionWasAnswered) return;
+            questionWasAnswered = true;
             const q = activeTestQuestions[activeQuestionIndex];
             const buttons = document.querySelectorAll('#options-container .btn-option');
 
@@ -802,25 +902,41 @@
         }
 
         function stepNextQuestion() {
+            if (!testIsActive) return;
+            if (questionTimerInterval !== null) {
+                clearInterval(questionTimerInterval);
+                questionTimerInterval = null;
+            }
             activeQuestionIndex++;
             if (activeQuestionIndex < activeTestQuestions.length) {
                 displayCurrentQuestion();
             } else {
-                renderResultsView();
+                finishTest('completed');
             }
         }
 
         function confirmExitTest() {
-            if (confirm("Are you sure you want to exit the current test session?")) {
+            if (confirm("Are you sure you want to exit the current test session? Your current results will be discarded.")) {
+                testIsActive = false;
+                stopTestTimers();
                 navigateTo('view-clinical-pharm');
             }
         }
 
         // Render Analyser Dashboard (Strongest to Weakest)
-        function renderResultsView() {
+        function renderResultsView(reason = 'completed') {
+            stopTestTimers();
             navigateTo('view-test-results');
-            document.getElementById('final-score-text').innerText = 
-                `You scored ${runningScore} out of ${activeTestQuestions.length} (${Math.round((runningScore / activeTestQuestions.length) * 100)}%)`;
+            const totalQuestions = activeTestQuestions.length;
+            const unanswered = Math.max(0, totalQuestions - Object.values(sessionTopicStats).reduce((sum, stat) => sum + stat.total, 0));
+            const scorePercent = totalQuestions ? Math.round((runningScore / totalQuestions) * 100) : 0;
+            const endingMessage = reason === 'time'
+                ? ' Total time expired; your test was submitted automatically.'
+                : reason === 'completed'
+                    ? ' Test completed.'
+                    : '';
+            document.getElementById('final-score-text').innerText =
+                `You scored ${runningScore} out of ${totalQuestions} (${scorePercent}%). Unanswered/skipped: ${unanswered}.${endingMessage}`;
 
             const tableBody = document.getElementById('analytics-table-body');
             tableBody.innerHTML = '';
