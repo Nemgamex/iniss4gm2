@@ -1,6 +1,6 @@
 {
   "name": "My Progressive Web App",
-  "short_name": "CP 2.1",
+  "short_name": "CP cosmo 2.3",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
