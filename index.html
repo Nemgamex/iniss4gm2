@@ -20,6 +20,7 @@
             --text-light: #64748b;
             --success: #16a34a;
             --danger: #dc2626;
+            --warning: #d97706;
             --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
@@ -129,6 +130,17 @@
             color: white;
             transform: translateY(-2px);
         }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
         
         .btn-grid {
             max-width: 100%;
@@ -155,7 +167,7 @@
             border: 1px solid var(--text-light);
             padding: 0.5rem 1rem;
             font-size: 0.9rem;
-            max-width: 160px;
+            max-width: 220px;
         }
 
         .btn-back:hover {
@@ -178,6 +190,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .badge-difficulty {
@@ -216,8 +230,16 @@
         .mock-heading-title { flex: 1; min-width: 0; text-align: center; }
         .mock-heading-title h2 { font-size: 1.55rem; margin-bottom: 0.25rem; }
         .mock-heading-row .timer-card { flex: 0 1 145px; }
-        .review-nav { display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 1.5rem; }
-        .review-nav .btn { max-width: 180px; }
+
+        .review-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            gap: 0.75rem; 
+            margin-top: 1.5rem; 
+        }
+        .review-nav .btn { max-width: 150px; }
+
         @media (max-width: 560px) {
             main { padding: 1rem; }
             .mock-heading-row { gap: 0.35rem; }
@@ -251,6 +273,15 @@
             border-left: 4px solid var(--success);
             font-size: 0.95rem;
             line-height: 1.5;
+        }
+
+        /* Review specific explanation styling */
+        .explanation-panel.review-mode {
+            display: block;
+            background: #f8fafc;
+            color: #1e293b;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         /* Question Footer (Tags & ID) */
@@ -328,6 +359,19 @@
         .pill-strong { background: #dcfce7; color: #15803d; }
         .pill-moderate { background: #fef9c3; color: #a16207; }
         .pill-weak { background: #fee2e2; color: #b91c1c; }
+
+        /* Review outcome badge */
+        .outcome-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .outcome-correct { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .outcome-incorrect { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .outcome-skipped { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 
         footer {
             text-align: center;
@@ -519,6 +563,17 @@
             </div>
 
             <div class="quiz-card">
+                <!-- Direct Post-Module Review Feature Banner -->
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 1.25rem; text-align: center; margin-bottom: 1.5rem;">
+                    <h3 style="color: var(--primary-color); font-size: 1.15rem; margin-bottom: 0.35rem;">Post-Module Review Available</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
+                        Analyze question-by-question rationales, options review, and detailed clinical explanations.
+                    </p>
+                    <button class="btn btn-primary" onclick="openReviewSession()" style="width: 100%; max-width: 380px; margin: 0 auto; display: block;">
+                        📖 Post-Module Question Review &amp; Explanations
+                    </button>
+                </div>
+
                 <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Subject Area Performance Analyzer</h3>
                 <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
                     Ranked from your strongest sub-topics to areas needing reinforcement:
@@ -536,7 +591,6 @@
                 </table>
 
                 <div class="button-container" style="margin-top: 2rem;">
-                    <button class="btn" onclick="openReviewSession()">Review Session &amp; Explanations</button>
                     <button class="btn" onclick="openTestConfig()">Take Another Test</button>
                     <button class="btn btn-back" onclick="navigateTo('view-clinical-pharm')">Return to Modules</button>
                 </div>
@@ -546,24 +600,38 @@
         <!-- PAGE 6: Review completed test questions and explanations -->
         <section id="view-review-session" class="view-section">
             <div class="view-header">
-                <h2>Review Session</h2>
+                <h2>Post-Module Review</h2>
                 <p id="review-progress">Question 1 of 1</p>
             </div>
             <div class="quiz-card">
                 <div class="question-header">
-                    <span id="review-subject-badge" style="font-weight:700; font-size:0.85rem; color:var(--secondary-color); text-transform:uppercase;"></span>
-                    <span id="review-difficulty-badge" class="badge-difficulty"></span>
+                    <div>
+                        <span id="review-subject-badge" style="font-weight:700; font-size:0.85rem; color:var(--secondary-color); text-transform:uppercase; margin-right: 0.5rem;"></span>
+                        <span id="review-difficulty-badge" class="badge-difficulty"></span>
+                    </div>
+                    <span id="review-status-pill" class="outcome-badge"></span>
                 </div>
+
+                <div style="margin: 0.75rem 0 1rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                    <label for="review-jump-select" style="font-size: 0.85rem; font-weight: 600; color: var(--text-light);">Jump to Question:</label>
+                    <select id="review-jump-select" class="select-input" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; width: auto; max-width: 180px; margin: 0;" onchange="jumpToReviewQuestion(this.value)"></select>
+                </div>
+
                 <h3 class="question-title" id="review-question-text"></h3>
                 <div class="options-group" id="review-options-container"></div>
-                <div class="explanation-panel" id="review-explanation-container" style="display:block;">
-                    <strong>Explanation:</strong> <span id="review-explanation-content"></span>
+                
+                <div class="explanation-panel review-mode" id="review-explanation-container">
+                    <strong style="color: var(--primary-color); display: block; margin-bottom: 0.4rem;">💡 Comprehensive Explanation:</strong>
+                    <div id="review-explanation-content" style="white-space: pre-line;"></div>
                 </div>
+
                 <div class="question-footer" id="review-question-footer"></div>
+
                 <div class="review-nav">
                     <button class="btn btn-back" id="review-prev-btn" onclick="stepReviewQuestion(-1)">← Previous</button>
                     <button class="btn" id="review-next-btn" onclick="stepReviewQuestion(1)">Next →</button>
                 </div>
+
                 <div class="nav-actions">
                     <button class="btn btn-back" onclick="navigateTo('view-test-results')">← Back to Performance Analysis</button>
                 </div>
@@ -643,8 +711,7 @@
             updatePoolStatus();
         }
 
-        // Subject/topic aliases. This allows the filter to match the different
-        // topic names already used in the question bank.
+        // Subject/topic aliases
         const subjectFilterAliases = {
             "general-pharmacology": [
                 "general pharmacology"
@@ -810,7 +877,6 @@
             const remaining = Math.max(0, questionDeadline - Date.now());
             updateTimerDisplay('question-time-remaining', remaining);
             if (remaining <= 0) {
-                // An unanswered question is skipped automatically when its minute expires.
                 stepNextQuestion();
             }
         }
@@ -825,14 +891,10 @@
         // Start Configured Test
         function startConfiguredTest() {
             const selectedCount = parseInt(document.getElementById('question-count-select').value, 10);
-
-            // Apply subject + difficulty filters, then remove previously attempted questions.
             let availablePool = getFilteredQuestionPool();
 
-            // If the selected filter combination has no unseen questions, explain clearly.
             if (availablePool.length === 0) {
                 const filteredTotal = getFilteredQuestionPool(true).length;
-
                 if (filteredTotal > 0) {
                     alert("All questions matching the selected subject/topic and difficulty have already been attempted. Reset Question History or choose a different filter.");
                 } else {
@@ -841,10 +903,7 @@
                 return;
             }
 
-            // Shuffle pool to ensure random order
             const randomized = shuffleArray(availablePool);
-
-            // Select only the requested count
             activeTestQuestions = randomized.slice(0, Math.min(selectedCount, randomized.length));
             activeQuestionIndex = 0;
             runningScore = 0;
@@ -908,7 +967,7 @@
             } else if (q.subject) {
                 const tagEl = document.createElement('span');
                 tagEl.className = 'hash-tag';
-                tagEl.innerText = `#${q.subject}`;
+                tagEl.innerText = `#${tagEl}`;
                 footer.appendChild(tagEl);
             }
         }
@@ -961,7 +1020,6 @@
 
         function stepNextQuestion() {
             if (!testIsActive) return;
-            // Keep skipped or timed-out questions explicitly recorded as unanswered.
             if (!questionWasAnswered) sessionResponses[activeQuestionIndex] = null;
             if (questionTimerInterval !== null) {
                 clearInterval(questionTimerInterval);
@@ -983,10 +1041,32 @@
             }
         }
 
-        // Open a read-only review of every question and its answer explanation.
+        // Post-Module Review Implementation
+        function populateReviewJumpDropdown() {
+            const jumpSelect = document.getElementById('review-jump-select');
+            jumpSelect.innerHTML = '';
+            activeTestQuestions.forEach((q, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                const chosen = sessionResponses[idx];
+                const marker = (chosen === null || chosen === undefined) ? '⚪' : (chosen === q.correct ? '✅' : '❌');
+                opt.textContent = `${marker} Q${idx + 1}`;
+                jumpSelect.appendChild(opt);
+            });
+        }
+
+        function jumpToReviewQuestion(index) {
+            reviewQuestionIndex = parseInt(index, 10);
+            renderReviewQuestion();
+        }
+
         function openReviewSession() {
-            if (!activeTestQuestions.length) return;
+            if (!activeTestQuestions || activeTestQuestions.length === 0) {
+                alert("No test questions available for review.");
+                return;
+            }
             reviewQuestionIndex = 0;
+            populateReviewJumpDropdown();
             renderReviewQuestion();
             navigateTo('view-review-session');
         }
@@ -1002,38 +1082,74 @@
             const q = activeTestQuestions[reviewQuestionIndex];
             if (!q) return;
             const selectedIdx = sessionResponses[reviewQuestionIndex];
+
+            // Progress text
             document.getElementById('review-progress').textContent =
                 `Question ${reviewQuestionIndex + 1} of ${activeTestQuestions.length}`;
+
+            // Sync Jump Selector
+            const jumpSelect = document.getElementById('review-jump-select');
+            if (jumpSelect) jumpSelect.value = reviewQuestionIndex;
+
+            // Badges
             document.getElementById('review-subject-badge').textContent =
                 (q.subTopics && q.subTopics.length > 0) ? q.subTopics[0] : (q.subject || 'Clinical Pharmacology');
+            
             const diffBadge = document.getElementById('review-difficulty-badge');
             const diff = (q.difficulty || 'Moderate').toLowerCase();
             diffBadge.textContent = diff;
             diffBadge.className = `badge-difficulty diff-${diff}`;
+
+            // Outcome badge
+            const outcomeBadge = document.getElementById('review-status-pill');
+            if (selectedIdx === null || selectedIdx === undefined) {
+                outcomeBadge.textContent = "Skipped / Unanswered";
+                outcomeBadge.className = "outcome-badge outcome-skipped";
+            } else if (selectedIdx === q.correct) {
+                outcomeBadge.textContent = "Correct";
+                outcomeBadge.className = "outcome-badge outcome-correct";
+            } else {
+                outcomeBadge.textContent = "Incorrect";
+                outcomeBadge.className = "outcome-badge outcome-incorrect";
+            }
+
+            // Question Text & Explanation
             document.getElementById('review-question-text').textContent = q.question;
             document.getElementById('review-explanation-content').textContent =
-                q.explanation || 'No explanation is available for this question.';
+                q.explanation || 'No detailed explanation provided for this question.';
+
+            // Render options with clear visual indicators
             const options = document.getElementById('review-options-container');
             options.innerHTML = '';
+            
             q.options.forEach((optionText, idx) => {
                 const button = document.createElement('button');
                 button.className = 'btn btn-option';
-                button.textContent = optionText;
                 button.disabled = true;
                 button.style.cursor = 'default';
-                if (idx === q.correct) {
+                
+                const isCorrect = (idx === q.correct);
+                const isUserChoice = (idx === selectedIdx);
+
+                if (isCorrect) {
                     button.style.backgroundColor = 'var(--success)';
                     button.style.borderColor = 'var(--success)';
                     button.style.color = '#ffffff';
-                    button.textContent = '✓ Correct answer: ' + optionText;
-                } else if (idx === selectedIdx) {
+                    button.textContent = `✓ [Correct] ${optionText}`;
+                } else if (isUserChoice) {
                     button.style.backgroundColor = 'var(--danger)';
                     button.style.borderColor = 'var(--danger)';
                     button.style.color = '#ffffff';
-                    button.textContent = '✗ Your answer: ' + optionText;
+                    button.textContent = `✗ [Your Choice] ${optionText}`;
+                } else {
+                    button.textContent = optionText;
+                    button.style.opacity = '0.85';
                 }
+
                 options.appendChild(button);
             });
+
+            // Question Footer with Tags and ID
             const footer = document.getElementById('review-question-footer');
             footer.innerHTML = `<span class="hash-tag hash-tag-id">#ID: ${q.id || (reviewQuestionIndex + 1)}</span>`;
             (Array.isArray(q.subTopics) ? q.subTopics : [q.subject].filter(Boolean)).forEach(tag => {
@@ -1042,12 +1158,16 @@
                 tagEl.textContent = `#${tag}`;
                 footer.appendChild(tagEl);
             });
-            document.getElementById('review-prev-btn').disabled = reviewQuestionIndex === 0;
-            document.getElementById('review-prev-btn').style.opacity = reviewQuestionIndex === 0 ? '0.45' : '1';
-            const nextButton = document.getElementById('review-next-btn');
-            nextButton.disabled = reviewQuestionIndex === activeTestQuestions.length - 1;
-            nextButton.style.opacity = reviewQuestionIndex === activeTestQuestions.length - 1 ? '0.45' : '1';
-            nextButton.textContent = reviewQuestionIndex === activeTestQuestions.length - 1 ? 'End of Review' : 'Next →';
+
+            // Nav buttons state
+            const prevBtn = document.getElementById('review-prev-btn');
+            prevBtn.disabled = reviewQuestionIndex === 0;
+            prevBtn.style.opacity = reviewQuestionIndex === 0 ? '0.45' : '1';
+
+            const nextBtn = document.getElementById('review-next-btn');
+            nextBtn.disabled = reviewQuestionIndex === activeTestQuestions.length - 1;
+            nextBtn.style.opacity = reviewQuestionIndex === activeTestQuestions.length - 1 ? '0.45' : '1';
+            nextBtn.textContent = reviewQuestionIndex === activeTestQuestions.length - 1 ? 'End of Review' : 'Next →';
         }
 
         // Render Analyser Dashboard (Strongest to Weakest)
@@ -1055,7 +1175,8 @@
             stopTestTimers();
             navigateTo('view-test-results');
             const totalQuestions = activeTestQuestions.length;
-            const unanswered = Math.max(0, totalQuestions - Object.values(sessionTopicStats).reduce((sum, stat) => sum + stat.total, 0));
+            const answeredTotal = Object.values(sessionTopicStats).reduce((sum, stat) => sum + stat.total, 0);
+            const unanswered = Math.max(0, totalQuestions - answeredTotal);
             const scorePercent = totalQuestions ? Math.round((runningScore / totalQuestions) * 100) : 0;
             const endingMessage = reason === 'time'
                 ? ' Total time expired; your test was submitted automatically.'
@@ -1063,7 +1184,7 @@
                     ? ' Test completed.'
                     : '';
             document.getElementById('final-score-text').innerText =
-                `You scored ${runningScore} out of ${totalQuestions} (${scorePercent}%). Unanswered/skipped: ${unanswered}.${endingMessage}`;
+                `You scored ${runningScore} out of ${totalQuestions} (${scorePercent}%). Skipped/Unanswered: ${unanswered}.${endingMessage}`;
 
             const tableBody = document.getElementById('analytics-table-body');
             tableBody.innerHTML = '';
