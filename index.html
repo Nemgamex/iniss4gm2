@@ -193,21 +193,40 @@
         .diff-hard { background: #fee2e2; color: #b91c1c; }
 
         .timer-panel {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
-            margin: 0 0 1.25rem;
+            display: contents;
         }
         .timer-card {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
+            border-radius: 7px;
+            padding: 0.45rem 0.55rem;
             text-align: center;
+            min-width: 100px;
         }
-        .timer-label { display: block; color: #1e40af; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.25rem; }
-        .timer-value { display: block; font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .timer-label { display: block; color: #1e40af; font-size: 0.62rem; font-weight: 700; margin-bottom: 0.15rem; }
+        .timer-value { display: block; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .timer-value.timer-warning { color: var(--danger); }
+        .mock-heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.65rem;
+            width: 100%;
+        }
+        .mock-heading-title { flex: 1; min-width: 0; text-align: center; }
+        .mock-heading-title h2 { font-size: 1.55rem; margin-bottom: 0.25rem; }
+        .mock-heading-row .timer-card { flex: 0 1 145px; }
+        .review-nav { display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 1.5rem; }
+        .review-nav .btn { max-width: 180px; }
+        @media (max-width: 560px) {
+            main { padding: 1rem; }
+            .mock-heading-row { gap: 0.35rem; }
+            .mock-heading-row .timer-card { flex-basis: 95px; min-width: 0; padding: 0.35rem 0.25rem; }
+            .mock-heading-title h2 { font-size: 1.1rem; }
+            .mock-heading-row .timer-label { font-size: 0.52rem; }
+            .mock-heading-row .timer-value { font-size: 0.9rem; }
+            .review-nav .btn { padding: 0.65rem 0.5rem; font-size: 0.85rem; }
+        }
 
         .question-title {
             font-size: 1.2rem;
@@ -450,21 +469,27 @@
         <!-- PAGE 4: Live Mock Test Session -->
         <section id="view-mock-test" class="view-section">
             <div class="view-header">
-                <h2>Mock Examination</h2>
-                <p id="test-progress">Loading...</p>
+                <div class="mock-heading-row">
+                    <div class="timer-panel" aria-live="polite">
+                        <div class="timer-card">
+                            <span class="timer-label">TOTAL TIME LEFT</span>
+                            <span class="timer-value" id="total-time-remaining">--:--</span>
+                        </div>
+                    </div>
+                    <div class="mock-heading-title">
+                        <h2>Mock Examination</h2>
+                        <p id="test-progress">Loading...</p>
+                    </div>
+                    <div class="timer-panel" aria-live="polite">
+                        <div class="timer-card">
+                            <span class="timer-label">THIS QUESTION</span>
+                            <span class="timer-value" id="question-time-remaining">01:00</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="quiz-card" id="quiz-box">
-                <div class="timer-panel" aria-live="polite">
-                    <div class="timer-card">
-                        <span class="timer-label">TOTAL TIME LEFT</span>
-                        <span class="timer-value" id="total-time-remaining">--:--</span>
-                    </div>
-                    <div class="timer-card">
-                        <span class="timer-label">THIS QUESTION</span>
-                        <span class="timer-value" id="question-time-remaining">01:00</span>
-                    </div>
-                </div>
                 <div class="question-header">
                     <span id="question-subject-badge" style="font-weight:700; font-size:0.85rem; color:var(--secondary-color); text-transform:uppercase;"></span>
                     <span id="question-difficulty-badge" class="badge-difficulty"></span>
@@ -511,8 +536,36 @@
                 </table>
 
                 <div class="button-container" style="margin-top: 2rem;">
+                    <button class="btn" onclick="openReviewSession()">Review Session &amp; Explanations</button>
                     <button class="btn" onclick="openTestConfig()">Take Another Test</button>
                     <button class="btn btn-back" onclick="navigateTo('view-clinical-pharm')">Return to Modules</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 6: Review completed test questions and explanations -->
+        <section id="view-review-session" class="view-section">
+            <div class="view-header">
+                <h2>Review Session</h2>
+                <p id="review-progress">Question 1 of 1</p>
+            </div>
+            <div class="quiz-card">
+                <div class="question-header">
+                    <span id="review-subject-badge" style="font-weight:700; font-size:0.85rem; color:var(--secondary-color); text-transform:uppercase;"></span>
+                    <span id="review-difficulty-badge" class="badge-difficulty"></span>
+                </div>
+                <h3 class="question-title" id="review-question-text"></h3>
+                <div class="options-group" id="review-options-container"></div>
+                <div class="explanation-panel" id="review-explanation-container" style="display:block;">
+                    <strong>Explanation:</strong> <span id="review-explanation-content"></span>
+                </div>
+                <div class="question-footer" id="review-question-footer"></div>
+                <div class="review-nav">
+                    <button class="btn btn-back" id="review-prev-btn" onclick="stepReviewQuestion(-1)">← Previous</button>
+                    <button class="btn" id="review-next-btn" onclick="stepReviewQuestion(1)">Next →</button>
+                </div>
+                <div class="nav-actions">
+                    <button class="btn btn-back" onclick="navigateTo('view-test-results')">← Back to Performance Analysis</button>
                 </div>
             </div>
         </section>
@@ -535,6 +588,8 @@
         let questionDeadline = 0;
         let testIsActive = false;
         let questionWasAnswered = false;
+        let sessionResponses = [];
+        let reviewQuestionIndex = 0;
 
         // Fisher-Yates array shuffle helper
         function shuffleArray(array) {
@@ -794,6 +849,8 @@
             activeQuestionIndex = 0;
             runningScore = 0;
             sessionTopicStats = {};
+            sessionResponses = activeTestQuestions.map(() => null);
+            reviewQuestionIndex = 0;
             questionWasAnswered = false;
             testIsActive = true;
 
@@ -859,6 +916,7 @@
         function handleAnswerSelect(selectedIdx, selectedButton) {
             if (!testIsActive || questionWasAnswered) return;
             questionWasAnswered = true;
+            sessionResponses[activeQuestionIndex] = selectedIdx;
             const q = activeTestQuestions[activeQuestionIndex];
             const buttons = document.querySelectorAll('#options-container .btn-option');
 
@@ -903,6 +961,8 @@
 
         function stepNextQuestion() {
             if (!testIsActive) return;
+            // Keep skipped or timed-out questions explicitly recorded as unanswered.
+            if (!questionWasAnswered) sessionResponses[activeQuestionIndex] = null;
             if (questionTimerInterval !== null) {
                 clearInterval(questionTimerInterval);
                 questionTimerInterval = null;
@@ -921,6 +981,73 @@
                 stopTestTimers();
                 navigateTo('view-clinical-pharm');
             }
+        }
+
+        // Open a read-only review of every question and its answer explanation.
+        function openReviewSession() {
+            if (!activeTestQuestions.length) return;
+            reviewQuestionIndex = 0;
+            renderReviewQuestion();
+            navigateTo('view-review-session');
+        }
+
+        function stepReviewQuestion(direction) {
+            const nextIndex = reviewQuestionIndex + direction;
+            if (nextIndex < 0 || nextIndex >= activeTestQuestions.length) return;
+            reviewQuestionIndex = nextIndex;
+            renderReviewQuestion();
+        }
+
+        function renderReviewQuestion() {
+            const q = activeTestQuestions[reviewQuestionIndex];
+            if (!q) return;
+            const selectedIdx = sessionResponses[reviewQuestionIndex];
+            document.getElementById('review-progress').textContent =
+                `Question ${reviewQuestionIndex + 1} of ${activeTestQuestions.length}`;
+            document.getElementById('review-subject-badge').textContent =
+                (q.subTopics && q.subTopics.length > 0) ? q.subTopics[0] : (q.subject || 'Clinical Pharmacology');
+            const diffBadge = document.getElementById('review-difficulty-badge');
+            const diff = (q.difficulty || 'Moderate').toLowerCase();
+            diffBadge.textContent = diff;
+            diffBadge.className = `badge-difficulty diff-${diff}`;
+            document.getElementById('review-question-text').textContent = q.question;
+            document.getElementById('review-explanation-content').textContent =
+                q.explanation || 'No explanation is available for this question.';
+            const options = document.getElementById('review-options-container');
+            options.innerHTML = '';
+            q.options.forEach((optionText, idx) => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-option';
+                button.textContent = optionText;
+                button.disabled = true;
+                button.style.cursor = 'default';
+                if (idx === q.correct) {
+                    button.style.backgroundColor = 'var(--success)';
+                    button.style.borderColor = 'var(--success)';
+                    button.style.color = '#ffffff';
+                    button.textContent = '✓ Correct answer: ' + optionText;
+                } else if (idx === selectedIdx) {
+                    button.style.backgroundColor = 'var(--danger)';
+                    button.style.borderColor = 'var(--danger)';
+                    button.style.color = '#ffffff';
+                    button.textContent = '✗ Your answer: ' + optionText;
+                }
+                options.appendChild(button);
+            });
+            const footer = document.getElementById('review-question-footer');
+            footer.innerHTML = `<span class="hash-tag hash-tag-id">#ID: ${q.id || (reviewQuestionIndex + 1)}</span>`;
+            (Array.isArray(q.subTopics) ? q.subTopics : [q.subject].filter(Boolean)).forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'hash-tag';
+                tagEl.textContent = `#${tag}`;
+                footer.appendChild(tagEl);
+            });
+            document.getElementById('review-prev-btn').disabled = reviewQuestionIndex === 0;
+            document.getElementById('review-prev-btn').style.opacity = reviewQuestionIndex === 0 ? '0.45' : '1';
+            const nextButton = document.getElementById('review-next-btn');
+            nextButton.disabled = reviewQuestionIndex === activeTestQuestions.length - 1;
+            nextButton.style.opacity = reviewQuestionIndex === activeTestQuestions.length - 1 ? '0.45' : '1';
+            nextButton.textContent = reviewQuestionIndex === activeTestQuestions.length - 1 ? 'End of Review' : 'Next →';
         }
 
         // Render Analyser Dashboard (Strongest to Weakest)
